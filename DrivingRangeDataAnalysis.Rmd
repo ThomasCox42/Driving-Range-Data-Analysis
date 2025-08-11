@@ -1,8 +1,8 @@
 ---
 title: "Driving Range Data Analysis"
-output:
-  html_document:
-    df_print: paged
+author: "Tom Cox"
+date: "August 11th, 2025"
+output: github_document
 ---
 
 # Introduction
