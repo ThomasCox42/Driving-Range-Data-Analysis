@@ -1,7 +1,8 @@
 Driving Range Data Analysis
 ================
 Tom Cox
-August 11th, 2025
+
+2025-08-11
 
 # Introduction
 

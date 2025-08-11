@@ -1,8 +1,14 @@
 ---
 title: "Driving Range Data Analysis"
-author: "Tom Cox"
-date: "August 11th, 2025"
+author: "Tom Cox \n"
+date: "`r Sys.Date()`"
+knit: (function(inputFile, encoding) {
+      out_dir <- "docs";
+      rmarkdown::render(inputFile,
+                        encoding=encoding,
+                        output_dir=file.path(dirname(inputFile), out_dir))})
 output: github_document
+  toc: yes
 ---
 
 # Introduction
@@ -13,7 +19,7 @@ output: github_document
 
 Importing our driving range data into R
 ```{r}
-data = read.csv("DrivingRangeData.csv")
+data = read.csv("data/DrivingRangeData.csv")
 data = na.omit(data)
 dim(data)
 names(data)
@@ -50,7 +56,7 @@ _Note: (Currently there is no indication via the index number what setting the D
 $$\text{Face to Path} = Club_{Face} - Club_{Path}$$
 Here is an example image of the Side and top-down view of a club and ball at impact from Garmin's golf app visualizing these measurements:
  
-![_Above, we can see that a Club.Face of 2.1°R (positive 2.1°) - a Club.Path of 3.0°L (negative 3.0°) equates to a Face.to.Path of 5.1°R (positive 5.1°)._](side_and_top_ball_impact_garmin_app.jpg)
+![_Above, we can see that a Club.Face of 2.1°R (positive 2.1°) - a Club.Path of 3.0°L (negative 3.0°) equates to a Face.to.Path of 5.1°R (positive 5.1°)._](images/side_and_top_ball_impact_garmin_app.jpg)
  
 
 
