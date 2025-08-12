@@ -364,6 +364,7 @@ plot_boxplot(
 ```
 
 ![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-speed-boxplot-1.png)<!-- -->
+![](README_files/figure-gfm/club-speed-boxplot-1.png)
 
 ``` r
 plot_boxplot(

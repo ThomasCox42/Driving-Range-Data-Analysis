@@ -4,7 +4,7 @@ author: "Tom Cox \n"
 date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = file.path(dirname(inputFile), 'README.md')) })
 output:
-  github_document:
+  rmarkdown::github_document:
     toc: true
 ---
 
@@ -293,6 +293,8 @@ plot_boxplot(
   y_title = "Club Speed (MPH)"
 )
 ```
+![](README_files/figure-gfm/club-speed-boxplot-1.png)
+
 ```{r attack-angle-boxplot, warning=FALSE}
 plot_boxplot(
   data = data,
