@@ -10,6 +10,7 @@ Tom Cox
   - [Dimensions, Measurements, and
     Definitions](#dimensions-measurements-and-definitions)
   - [Defining Useful Functions](#defining-useful-functions)
+  - [Data Exploration](#data-exploration)
   - [Building an Interpretable model](#building-an-interpretable-model)
 - [Appendix](#appendix)
 - [References](#references)
@@ -197,6 +198,38 @@ plot_qq = function(model, pointcol = "dodgerblue", linecol = "darkorange") {
   )
   qqline(resid(model), col = linecol, lwd = 2)
 }
+
+#' Create an Ordered Box Plot
+#'
+#' Generates a ggplot2 box plot with the correct aesthetic set-up.
+#'
+#' @param data The data frame containing the data.
+#' @param x_var The bare (unquoted) column name for the categorical x-axis.
+#' @param y_var The bare (unquoted) column name for the numeric y-axis.
+#' @param orderby_var The bare (unquoted) numeric column to order the x-axis by.
+#' @param title_var Character. The title for the graph
+#' @param x_title Character. The x-axis title for the graph
+#' @param y_title Character. The y-axis title for the graph
+#'
+#' @return A ggplot object.
+#'
+plot_boxplot = function(data, x_var, y_var, order_by_var, 
+                        title_var, x_title, y_title) {
+ggplot(data, aes(x = reorder({{x_var}}, {{order_by_var}}), y = {{y_var}})) +
+    geom_boxplot(
+      fill = "dodgerblue",
+      outlier.colour = "darkorange",
+      outlier.shape = 19,
+      outlier.size = 2,
+      staplewidth = 0.5) +
+    labs(
+      title = title_var,
+      x = x_title,
+      y = y_title
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Rotates x-axis labels for readability
+}
 ```
 
 **Model Results Storage**
@@ -316,6 +349,15 @@ record_results = function(model, results_df, show = F, coef = F) {
 }
 ```
 
+### Data Exploration
+
+![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-speed-boxplot-1.png)<!-- -->
+![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/attack-angle-boxplot-1.png)<!-- -->
+
+![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-face-histogram-1.png)<!-- -->
+
+![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-path-histogram-1.png)<!-- -->
+
 ### Building an Interpretable model
 
 For our first model, we aim to build a model that prioritizes
@@ -356,8 +398,20 @@ head(shot_signals) # First 5 rows of our signals table
     ## 5 Pitching Wedge     73.752         3.64     -2.30     -1.90         0.40
     ## 6         9 Iron     72.007         0.02     -5.10     19.43        24.53
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or
-by pressing *Ctrl+Alt+I*.
+TODO:
+
+- Finish up data visualizations for data exploration section.
+
+- Set up simple linear model
+
+- Prove LINE assumptions
+
+- Implement a geom_point graph, x = deviation, Y = carry distance
+  <https://github.com/hrbrmstr/ggalt?tab=readme-ov-file#alternate-2d-density-plots>
+  m \<- ggplot(faithful, aes(x = eruptions, y = waiting)) +
+  geom_point() + xlim(0.5, 6) + ylim(40, 110)
+
+  m + geom_bkde2d(bandwidth=c(0.5, 4))
 
 # Appendix
 
