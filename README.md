@@ -351,64 +351,11 @@ record_results = function(model, results_df, show = F, coef = F) {
 
 ### Data Exploration
 
-``` r
-plot_boxplot(
-  data = data,
-  x_var = Club.Name,
-  y_var = Club.Speed,
-  order_by_var = Index.Number,
-  title_var = "Club Speed Distribution by Club Name",
-  x_title = "Club Name",
-  y_title = "Club Speed (MPH)"
-)
-```
-
-![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-speed-boxplot-1.png)<!-- -->
 ![](README_files/figure-gfm/club-speed-boxplot-1.png)
 
-``` r
-plot_boxplot(
-  data = data,
-  x_var = Club.Name,
-  y_var = Attack.Angle,
-  order_by_var = Index.Number,
-  title_var = "Attack Angle Distribution by Club Name",
-  x_title = "Club Name",
-  y_title = "Attack Angle (°)"
-)
-```
+![](README_files/figure-gfm/attack-angle-boxplot-1.png)
 
-![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/attack-angle-boxplot-1.png)<!-- -->
-
-``` r
-p1 = ggplot(data, aes(x = Club.Face)) +
-  geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
-  geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
-  labs(
-    title = "Distribution of Club Face",
-    subtitle = "A value of 0 indicates a path square to the target",
-    x = "Club Face (°)",
-    y = "Frequency (# of Shots)"
-  ) +
-  theme_minimal()
-
-p2 = ggplot(data, aes(x = Club.Path)) +
-  geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
-  geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
-  labs(
-    title = "Distribution of Club Path",
-    subtitle = "A value of 0 indicates a path square to the target",
-    x = "Club Path (°)",
-    y = "Frequency (# of Shots)"
-  ) +
-  theme_minimal()
-
-p1 / p2
-```
-
-![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-face-histogram-1.png)<!-- -->
-
-![](C:\Users\THOMAS~1\DOCUME~1\DRIVIN~1\README~1/figure-gfm/club-path-histogram-1.png)<!-- -->
+![](README_files/figure-gfm/club-face-histogram-1.png)
 
 ### Building an Interpretable model
 

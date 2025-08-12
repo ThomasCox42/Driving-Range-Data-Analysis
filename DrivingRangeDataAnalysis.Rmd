@@ -282,7 +282,7 @@ record_results = function(model, results_df, show = F, coef = F) {
 
 ### Data Exploration
 
-```{r club-speed-boxplot, warning=FALSE}
+```{r club-speed-boxplot, warning=FALSE, include=FALSE}
 plot_boxplot(
   data = data,
   x_var = Club.Name,
@@ -295,7 +295,7 @@ plot_boxplot(
 ```
 ![](README_files/figure-gfm/club-speed-boxplot-1.png)
 
-```{r attack-angle-boxplot, warning=FALSE}
+```{r attack-angle-boxplot, warning=FALSE, include=FALSE}
 plot_boxplot(
   data = data,
   x_var = Club.Name,
@@ -306,8 +306,9 @@ plot_boxplot(
   y_title = "Attack Angle (°)"
 )
 ```
+![](README_files/figure-gfm/attack-angle-boxplot-1.png)
 
-```{r club-face-histogram, warning=FALSE}
+```{r club-face-histogram, warning=FALSE, include=FALSE}
 p1 = ggplot(data, aes(x = Club.Face)) +
   geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
   geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
@@ -332,8 +333,9 @@ p2 = ggplot(data, aes(x = Club.Path)) +
 
 p1 / p2
 ```
+![](README_files/figure-gfm/club-face-histogram-1.png)
 
-```{r club-path-histogram, echo=FALSE, warning=FALSE}
+```{r club-path-histogram, warning=FALSE, include=FALSE}
 ggplot(data, aes(x = Club.Path)) +
   geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
   geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
