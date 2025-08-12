@@ -2,7 +2,7 @@ Driving Range Data Analysis
 ================
 Tom Cox
 
-2025-08-11
+2025-08-12
 
 - [Introduction](#introduction)
 - [Methods](#methods)
@@ -303,18 +303,20 @@ record_results = function(model, results_df, show = F, coef = F) {
   )^2)), 3)
   
   # --- Format Predictor Names ---
+  # preds_full = names(coef(model))[2:length(coef(model))] # Exclude intercept
+  # # Clean up dummy variable names for reporting
+  # if (TRUE %in% str_detect(preds_full, "team_abbreviation")) {
+  #   preds = paste(
+  #     c(
+  #       'team_abbreviation', 
+  #       preds_full[!grepl('team_abbreviation', preds_full)]
+  #       ), 
+  #     collapse = ' + ')
+  # } else {
+  #   preds = paste(preds_full, collapse = ' + ')
+  # }
   preds_full = names(coef(model))[2:length(coef(model))] # Exclude intercept
-  # Clean up dummy variable names for reporting
-  if (TRUE %in% str_detect(preds_full, "team_abbreviation")) {
-    preds = paste(
-      c(
-        'team_abbreviation', 
-        preds_full[!grepl('team_abbreviation', preds_full)]
-        ), 
-      collapse = ' + ')
-  } else {
-    preds = paste(preds_full, collapse = ' + ')
-  }
+  preds = paste(preds_full, collapse = ' + ')
   
   # --- Optional Console Output ---
   if (show) {
@@ -351,11 +353,28 @@ record_results = function(model, results_df, show = F, coef = F) {
 
 ### Data Exploration
 
-![](README_files/figure-gfm/club-speed-boxplot-1.png)
+<figure>
+<img src="README_files/figure-gfm/club-speed-boxplot-1.png"
+alt="Figure _. Box-and-whisker plots comparing the distributions of measured clubhead speed across golf clubs sampled." />
+<figcaption aria-hidden="true">Figure _. Box-and-whisker plots comparing
+the distributions of measured clubhead speed across golf clubs
+sampled.</figcaption>
+</figure>
 
-![](README_files/figure-gfm/attack-angle-boxplot-1.png)
+<figure>
+<img src="README_files/figure-gfm/attack-angle-boxplot-1.png"
+alt="Figure _. Box-and-whisker plots comparing the distributions of measured attack angle across golf clubs sampled." />
+<figcaption aria-hidden="true">Figure _. Box-and-whisker plots comparing
+the distributions of measured attack angle across golf clubs
+sampled.</figcaption>
+</figure>
 
-![](README_files/figure-gfm/club-face-histogram-1.png)
+<figure>
+<img src="README_files/figure-gfm/club-face-histogram-1.png"
+alt="Figure _. Frequency distributions of (a) club face angle and (b) club path angle at impact." />
+<figcaption aria-hidden="true">Figure _. Frequency distributions of (a)
+club face angle and (b) club path angle at impact.</figcaption>
+</figure>
 
 ### Building an Interpretable model
 
@@ -374,28 +393,120 @@ post-launch data.
 
 ``` r
 shot_signals = data[c(
-  "Club.Name", # It's possible that Club.Name as a categorical variable could 
-               # help express the loft, lie, shaft length, and any other 
-               # characteristics not expressed elsewhere in the data set.
+  # "Club.Name", # It's possible that Club.Name as a categorical variable could 
+                 # help express the loft, lie, shaft length, and any other 
+                 # characteristics not expressed elsewhere in the data set.
   "Club.Speed",
   "Attack.Angle",
   "Club.Path",
   "Club.Face",
-  "Face.to.Path" # We will later show Face.to.Path's multicollinearity issues 
+  "Face.to.Path", # We will later show Face.to.Path's multicollinearity issues 
                  # and remove it.
+  "Total.Deviation.Angle" # our dependent variable we'll attempt to predict
   # We may include Launch.Angle or other post-swing measurements in the future.
 )]
 
 head(shot_signals) # First 5 rows of our signals table
 ```
 
-    ##        Club.Name Club.Speed Attack.Angle Club.Path Club.Face Face.to.Path
-    ## 1 Pitching Wedge     63.372         1.41     -7.37     -0.08         7.29
-    ## 2 Pitching Wedge     72.812        -0.70     -0.15     -1.19        -1.04
-    ## 3 Pitching Wedge     71.045         0.24     -3.23      1.13         4.36
-    ## 4 Pitching Wedge     72.857         3.04     -1.58     -3.49        -1.91
-    ## 5 Pitching Wedge     73.752         3.64     -2.30     -1.90         0.40
-    ## 6         9 Iron     72.007         0.02     -5.10     19.43        24.53
+    ##   Club.Speed Attack.Angle Club.Path Club.Face Face.to.Path
+    ## 1     63.372         1.41     -7.37     -0.08         7.29
+    ## 2     72.812        -0.70     -0.15     -1.19        -1.04
+    ## 3     71.045         0.24     -3.23      1.13         4.36
+    ## 4     72.857         3.04     -1.58     -3.49        -1.91
+    ## 5     73.752         3.64     -2.30     -1.90         0.40
+    ## 6     72.007         0.02     -5.10     19.43        24.53
+    ##   Total.Deviation.Angle
+    ## 1                  1.42
+    ## 2                 -4.89
+    ## 3                  4.82
+    ## 4                 -4.41
+    ## 5                 -3.52
+    ## 6                 15.34
+
+Fitting our linear model Method: multiple linear regression using Least
+Squares
+
+``` r
+linear_model = lm(Total.Deviation.Angle ~ Club.Face + Club.Path, data = shot_signals)
+# . = all other signals in data set
+
+interpret_results_df = record_results(linear_model,
+                                      interpret_results_df,
+                                      show = T,
+                                      coef = F)
+```
+
+    ## [1] "Model Name: linear_model"
+    ## [1] "Number of Parameters: 3"
+    ## [1] "AIC: 1867.162"
+    ## [1] "BIC: 1882.478"
+    ## [1] "Adjusted R-squared: 0.837"
+    ## [1] "LOOCV-RMSE: 3.761"
+
+``` r
+cor_df = data.frame(round(cor(shot_signals), 2))
+cor_df = cbind(predictor_1 = rownames(cor_df), cor_df)
+rownames(cor_df) = 1:nrow(cor_df)
+cor_df %>% 
+  pivot_longer(!predictor_1, names_to = "predictor_2", values_to = "correlation") %>% 
+  filter(predictor_1 != predictor_2) %>% 
+  arrange(desc(abs(correlation))) %>%
+  top_n(6, correlation)
+```
+
+    ## # A tibble: 6 × 3
+    ##   predictor_1           predictor_2           correlation
+    ##   <chr>                 <chr>                       <dbl>
+    ## 1 Club.Face             Total.Deviation.Angle        0.92
+    ## 2 Total.Deviation.Angle Club.Face                    0.92
+    ## 3 Club.Face             Face.to.Path                 0.9 
+    ## 4 Face.to.Path          Club.Face                    0.9 
+    ## 5 Face.to.Path          Total.Deviation.Angle        0.84
+    ## 6 Total.Deviation.Angle Face.to.Path                 0.84
+
+``` r
+vif(linear_model)
+```
+
+    ## Club.Face Club.Path 
+    ##  1.033495  1.033495
+
+``` r
+# Generate the grid for the prediction plane
+# We create a grid of x and y values to plot the surface
+axis_x <- seq(min(shot_signals$Club.Face), max(shot_signals$Club.Face), length.out = 15)
+axis_y <- seq(min(shot_signals$Club.Path), max(shot_signals$Club.Path), length.out = 15)
+
+# Use the model to predict the z-values (Total.Deviation.Angle) for the plane
+plane_z <- outer(axis_x, axis_y, function(x, y) {
+  predict(linear_model, newdata = data.frame(Club.Face = x, Club.Path = y))
+})
+
+
+# Create the 3D plot
+fig <- plot_ly(data = shot_signals, x = ~Club.Face, y = ~Club.Path, z = ~Total.Deviation.Angle, type = "scatter3d", mode = "markers") %>%
+  
+  # Add the regression plane surface
+  add_surface(x = axis_x, y = axis_y, z = plane_z, colorscale = 'Blues', showscale = FALSE, opacity = 0.7) %>%
+  
+  # Customize the layout and axis titles
+  layout(
+    title = "3D Regression Plane for Total Deviation Angle",
+    scene = list(
+      xaxis = list(title = "Club Face Angle (°)"),
+      yaxis = list(title = "Club Path Angle (°)"),
+      zaxis = list(title = "Total Deviation Angle (°)")
+    )
+  )
+
+# Display the plot
+# fig
+```
+
+<img src="README_files/figure-gfm/3D-SimpleLinearModel-1.png" width="50%" style="display: block; margin: auto;" /><img src="README_files/figure-gfm/3D-SimpleLinearModel-2.png" width="50%" style="display: block; margin: auto;" /><img src="README_files/figure-gfm/3D-SimpleLinearModel-3.png" width="50%" style="display: block; margin: auto;" /><img src="README_files/figure-gfm/3D-SimpleLinearModel-4.png" width="50%" style="display: block; margin: auto;" />
+
+------------------------------------------------------------------------
 
 TODO:
 

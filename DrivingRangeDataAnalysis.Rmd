@@ -9,8 +9,12 @@ output:
 ---
 
 ```{r libraries, echo=F, message = F, warning = F}
+library(tidyverse)
 library(ggplot2)
 library(patchwork)
+library(car) # VIF
+library(plotly)
+library(knitr)
 ```
 
 
@@ -234,18 +238,20 @@ record_results = function(model, results_df, show = F, coef = F) {
   )^2)), 3)
   
   # --- Format Predictor Names ---
+  # preds_full = names(coef(model))[2:length(coef(model))] # Exclude intercept
+  # # Clean up dummy variable names for reporting
+  # if (TRUE %in% str_detect(preds_full, "team_abbreviation")) {
+  #   preds = paste(
+  #     c(
+  #       'team_abbreviation', 
+  #       preds_full[!grepl('team_abbreviation', preds_full)]
+  #       ), 
+  #     collapse = ' + ')
+  # } else {
+  #   preds = paste(preds_full, collapse = ' + ')
+  # }
   preds_full = names(coef(model))[2:length(coef(model))] # Exclude intercept
-  # Clean up dummy variable names for reporting
-  if (TRUE %in% str_detect(preds_full, "team_abbreviation")) {
-    preds = paste(
-      c(
-        'team_abbreviation', 
-        preds_full[!grepl('team_abbreviation', preds_full)]
-        ), 
-      collapse = ' + ')
-  } else {
-    preds = paste(preds_full, collapse = ' + ')
-  }
+  preds = paste(preds_full, collapse = ' + ')
   
   # --- Optional Console Output ---
   if (show) {
@@ -282,7 +288,7 @@ record_results = function(model, results_df, show = F, coef = F) {
 
 ### Data Exploration
 
-```{r club-speed-boxplot, warning=FALSE, include=FALSE}
+```{r club-speed-boxplot, warning=FALSE, include=FALSE, results = 'hide'}
 plot_boxplot(
   data = data,
   x_var = Club.Name,
@@ -293,9 +299,9 @@ plot_boxplot(
   y_title = "Club Speed (MPH)"
 )
 ```
-![](README_files/figure-gfm/club-speed-boxplot-1.png)
+![Figure _. Box-and-whisker plots comparing the distributions of measured clubhead speed across golf clubs sampled.](README_files/figure-gfm/club-speed-boxplot-1.png)
 
-```{r attack-angle-boxplot, warning=FALSE, include=FALSE}
+```{r attack-angle-boxplot, warning=FALSE, include=FALSE, results = 'hide'}
 plot_boxplot(
   data = data,
   x_var = Club.Name,
@@ -306,9 +312,9 @@ plot_boxplot(
   y_title = "Attack Angle (°)"
 )
 ```
-![](README_files/figure-gfm/attack-angle-boxplot-1.png)
+![Figure _. Box-and-whisker plots comparing the distributions of measured attack angle across golf clubs sampled.](README_files/figure-gfm/attack-angle-boxplot-1.png)
 
-```{r club-face-histogram, warning=FALSE, include=FALSE}
+```{r club-face-and-path-histogram, warning=FALSE, include=FALSE, results = 'hide'}
 p1 = ggplot(data, aes(x = Club.Face)) +
   geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
   geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
@@ -333,22 +339,7 @@ p2 = ggplot(data, aes(x = Club.Path)) +
 
 p1 / p2
 ```
-![](README_files/figure-gfm/club-face-histogram-1.png)
-
-```{r club-path-histogram, warning=FALSE, include=FALSE}
-ggplot(data, aes(x = Club.Path)) +
-  geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
-  geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
-  labs(
-    title = "Distribution of Club Path",
-    subtitle = "A value of 0 indicates a path square to the target",
-    x = "Club Path (°)",
-    y = "Frequency (# of Shots)"
-  ) +
-  theme_minimal()
-```
-
-
+![Figure _. Frequency distributions of (a) club face angle and (b) club path angle at impact. ](README_files/figure-gfm/club-face-histogram-1.png)
 
 ### Building an Interpretable model
 
@@ -358,25 +349,106 @@ For our first model, we aim to build a model that prioritizes interpretability w
 Let's select the signal columns we'll use for our first iteration of the model. Some of these may be removed later due to collinearity issues. We are specifically choosing measurements that are "pre-ball flight" at first, artificially handicapping ourselves in order to first test whether we can achieve well-enough performing results without post-launch data.
 ```{r select-signals}
 shot_signals = data[c(
-  "Club.Name", # It's possible that Club.Name as a categorical variable could 
-               # help express the loft, lie, shaft length, and any other 
-               # characteristics not expressed elsewhere in the data set.
+  # "Club.Name", # It's possible that Club.Name as a categorical variable could 
+                 # help express the loft, lie, shaft length, and any other 
+                 # characteristics not expressed elsewhere in the data set.
   "Club.Speed",
   "Attack.Angle",
   "Club.Path",
   "Club.Face",
-  "Face.to.Path" # We will later show Face.to.Path's multicollinearity issues 
+  "Face.to.Path", # We will later show Face.to.Path's multicollinearity issues 
                  # and remove it.
+  "Total.Deviation.Angle" # our dependent variable we'll attempt to predict
   # We may include Launch.Angle or other post-swing measurements in the future.
 )]
 
 head(shot_signals) # First 5 rows of our signals table
 ```
 
+Fitting our linear model
+Method: multiple linear regression using Least Squares 
+
+```{r}
+linear_model = lm(Total.Deviation.Angle ~ Club.Face + Club.Path, data = shot_signals)
+# . = all other signals in data set
+
+interpret_results_df = record_results(linear_model,
+                                      interpret_results_df,
+                                      show = T,
+                                      coef = F)
+```
+
+```{r cor-matrix, message = F, warning = F}
+cor_df = data.frame(round(cor(shot_signals), 2))
+cor_df = cbind(predictor_1 = rownames(cor_df), cor_df)
+rownames(cor_df) = 1:nrow(cor_df)
+cor_df %>% 
+  pivot_longer(!predictor_1, names_to = "predictor_2", values_to = "correlation") %>% 
+  filter(predictor_1 != predictor_2) %>% 
+  arrange(desc(abs(correlation))) %>%
+  top_n(6, correlation)
+```
+
+```{r}
+vif(linear_model)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Generate the grid for the prediction plane
+# We create a grid of x and y values to plot the surface
+axis_x <- seq(min(shot_signals$Club.Face), max(shot_signals$Club.Face), length.out = 15)
+axis_y <- seq(min(shot_signals$Club.Path), max(shot_signals$Club.Path), length.out = 15)
+
+# Use the model to predict the z-values (Total.Deviation.Angle) for the plane
+plane_z <- outer(axis_x, axis_y, function(x, y) {
+  predict(linear_model, newdata = data.frame(Club.Face = x, Club.Path = y))
+})
+
+
+# Create the 3D plot
+fig <- plot_ly(data = shot_signals, x = ~Club.Face, y = ~Club.Path, z = ~Total.Deviation.Angle, type = "scatter3d", mode = "markers") %>%
+  
+  # Add the regression plane surface
+  add_surface(x = axis_x, y = axis_y, z = plane_z, colorscale = 'Blues', showscale = FALSE, opacity = 0.7) %>%
+  
+  # Customize the layout and axis titles
+  layout(
+    title = "3D Regression Plane for Total Deviation Angle",
+    scene = list(
+      xaxis = list(title = "Club Face Angle (°)"),
+      yaxis = list(title = "Club Path Angle (°)"),
+      zaxis = list(title = "Total Deviation Angle (°)")
+    )
+  )
+
+# Display the plot
+# fig
+```
+
+```{r 2x2-grid, echo=FALSE, out.width="50%", fig.align="center", fig.show="hold"}
+# Make sure you have the knitr library loaded
+# You don't need to call library(knitr) here if it's already loaded
+
+# Provide the file paths to your four images
+knitr::include_graphics(c(
+  "README_files/figure-gfm/3D-SimpleLinearModel-1.png",
+  "README_files/figure-gfm/3D-SimpleLinearModel-2.png",
+  "README_files/figure-gfm/3D-SimpleLinearModel-3.png",
+  "README_files/figure-gfm/3D-SimpleLinearModel-4.png"
+))
+```
 
 
 
 
+
+
+
+
+
+
+
+---
 
 TODO: 
 
