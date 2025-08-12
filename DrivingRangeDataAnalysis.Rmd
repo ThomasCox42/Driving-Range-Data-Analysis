@@ -282,7 +282,7 @@ record_results = function(model, results_df, show = F, coef = F) {
 
 ### Data Exploration
 
-```{r club-speed-boxplot, echo=FALSE, warning=FALSE}
+```{r club-speed-boxplot, warning=FALSE}
 plot_boxplot(
   data = data,
   x_var = Club.Name,
@@ -293,7 +293,7 @@ plot_boxplot(
   y_title = "Club Speed (MPH)"
 )
 ```
-```{r attack-angle-boxplot, echo=FALSE, warning=FALSE}
+```{r attack-angle-boxplot, warning=FALSE}
 plot_boxplot(
   data = data,
   x_var = Club.Name,
@@ -305,7 +305,7 @@ plot_boxplot(
 )
 ```
 
-```{r club-face-histogram, echo=FALSE, warning=FALSE}
+```{r club-face-histogram, warning=FALSE}
 p1 = ggplot(data, aes(x = Club.Face)) +
   geom_histogram(binwidth = 1, fill = "dodgerblue", color = "black", alpha = 0.7) +
   geom_vline(xintercept = 0, color = "darkorange", linetype = "dashed", linewidth = 1) +
