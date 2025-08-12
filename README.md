@@ -199,6 +199,8 @@ plot_qq = function(model, pointcol = "dodgerblue", linecol = "darkorange") {
 }
 ```
 
+**Model Results Storage**
+
 ``` r
 #' Data Frame to Store and Compare Model Results
 #'
@@ -225,6 +227,8 @@ interpret_results_df = data.frame(
   stringsAsFactors = FALSE
 )
 ```
+
+**Model Evaluation Function**
 
 ``` r
 # TODO: Edit record_results to work for this model instead of old NBA one.
